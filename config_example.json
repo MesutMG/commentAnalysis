@@ -1,0 +1,6 @@
+{
+    "ollama_url": "http://localhost:11434/api/generate",
+    "model_name": "qwen2.5:3b",
+    "data_path": "data/example_comments.csv",
+    "output_path": "output.csv"
+}

@@ -1,2 +1,5 @@
 data/
 venv/
+config.json
+output.csv
+output_cleaned.csv
