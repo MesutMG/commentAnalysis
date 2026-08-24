@@ -23,14 +23,22 @@ except UnicodeDecodeError:
 
 # 2. Preprocess (Drop PII & empty comments)
 preprocessor = Preprocessor()
+comment_filter = Filter()
+analyzer = Analyzer()
+
+# 1. Load Data
+try:
+    df = pd.read_csv(DATA_PATH, sep=";", encoding="utf-8")
+except UnicodeDecodeError:
+    df = pd.read_csv(DATA_PATH, sep=";", encoding="windows-1254")
+
+# 2. Preprocess (Drop PII & empty comments)
 df = preprocessor.process(df)
 
 # 3. Static Filter
-comment_filter = Filter()
 df_clean, df_flagged = comment_filter.filter(df)
 
 # 4. LLM Analysis on Clean Rows
-analyzer = Analyzer()
 df_analyzed = analyzer.run_pipeline(df_clean, LLM_ROWS)
 
 # 5. Populate Default Fields for Statically Flagged Rows
