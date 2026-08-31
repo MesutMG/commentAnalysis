@@ -25,6 +25,7 @@ except UnicodeDecodeError:
 preprocessor = Preprocessor()
 comment_filter = Filter()
 analyzer = Analyzer()
+df_analyzed = analyzer.run_pipeline(df_clean, LLM_ROWS)
 
 # 1. Load Data
 try:
