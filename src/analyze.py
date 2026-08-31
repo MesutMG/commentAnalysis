@@ -1,73 +1,77 @@
 import json
 import os
-import pandas as pd
-import requests
-from tqdm import tqdm
+import aiohttp
+from pydantic import BaseModel, Field, ValidationError
 
 CONFIG_PATH = "config.json"
-with open(CONFIG_PATH, "r") as f:
+with open(CONFIG_PATH, "r", encoding="utf-8") as f:
     config = json.load(f)
 
 OLLAMA_URL = config.get("ollama_url", "http://localhost:11434/api/generate")
-MODEL_NAME = config.get("model_name", "qwen2.5:3b")
+MODEL_NAME = config.get("model_name", "qwen3.5:9b")
+
+
+# Pydantic Validation Schema
+class AnalysisResult(BaseModel):
+    degerlendirme: str = Field(default="notr")
+    kategori: str = Field(default="diger")
+    llm_uygunsuz: bool = Field(default=False)
+    llm_sebep: str | None = Field(default=None)
 
 
 class Analyzer:
     def __init__(self):
-        self.PROMPT_TEMPLATE = """Aşağıdaki müşteri yorumunu analiz et.
-        Yorum: "{comment}"
+        self.PROMPT_TEMPLATE = """Aşağıdaki müşteri yorumunu analiz et ve yalnızca JSON döndür:
+Yorum: "{comment}"
 
-        YALNIZCA aşağıdaki JSON formatında ve Türkçe değerlerle yanıt ver:
-        {{
-        "degerlendirme": "pozitif" | "notr" | "negatif",
-        "kategori": "servis" | "dakiklik" | "personel" | "temizlik" | "spam" | "diger",
-        "llm_uygunsuz": true | false,
-        "llm_sebep": "Uygunsuzluk veya şikayet nedeni (Türkçe) ya da null"
-        }}
-        """
+JSON formatı:
+{{
+  "degerlendirme": "pozitif" | "notr" | "negatif",
+  "kategori": "servis" | "dakiklik" | "personel" | "temizlik" | "spam" | "diger",
+  "llm_uygunsuz": false,
+  "llm_sebep": null
+}}
+"""
 
-    def analyze_comment(self, comment: str) -> dict:
+    async def analyze_comment_async(
+        self, session: aiohttp.ClientSession, comment: str
+    ) -> AnalysisResult:
         payload = {
             "model": MODEL_NAME,
             "prompt": self.PROMPT_TEMPLATE.format(comment=comment),
             "stream": False,
             "format": "json",
-            "options": {
-                "temperature": 0.1  # Low temperature ensures deterministic output
-            },
+            "options": {"temperature": 0.1},
         }
 
+        # Generous timeout for local inference
+        req_timeout = aiohttp.ClientTimeout(total=180)
+
         try:
-            response = requests.post(OLLAMA_URL, json=payload, timeout=30)
-            response.raise_for_status()
-            result = response.json()
-            return json.loads(result["response"])
+            async with session.post(OLLAMA_URL, json=payload, timeout=req_timeout) as response:
+                response.raise_for_status()
+                result = await response.json()
+                raw_text = result.get("response", "").strip()
+
+                # Clean markdown wrapping if present
+                if raw_text.startswith("```"):
+                    raw_text = raw_text.strip("`")
+                    if raw_text.startswith("json"):
+                        raw_text = raw_text[4:].strip()
+
+                res = AnalysisResult.model_validate_json(raw_text)
+
+                # Reset placeholder strings if flagged false
+                if not res.llm_uygunsuz:
+                    res.llm_sebep = None
+                return res
+
         except Exception as e:
-            return {
-                "degerlendirme": "hata",
-                "kategori": "hata",
-                "llm_uygunsuz": False,
-                "llm_sebep": str(e),
-            }
-
-    def run_pipeline(self, df: pd.DataFrame, max_rows: int = None) -> pd.DataFrame:
-        df_subset = df.head(max_rows).copy() if max_rows else df.copy()
-
-        degerlendirmeler = []
-        kategoriler = []
-        uygunsuzluklar = []
-        sebepler = []
-
-        for comment in tqdm(df_subset["comment"], desc="LLM Inference"):
-            res = self.analyze_comment(str(comment))
-            degerlendirmeler.append(res.get("degerlendirme", "notr"))
-            kategoriler.append(res.get("kategori", "diger"))
-            uygunsuzluklar.append(res.get("llm_uygunsuz", False))
-            sebepler.append(res.get("llm_sebep", None))
-
-        df_subset["degerlendirme"] = degerlendirmeler
-        df_subset["kategori"] = kategoriler
-        df_subset["llm_uygunsuz"] = uygunsuzluklar
-        df_subset["llm_sebep"] = sebepler
-
-        return df_subset
+            err_detail = f"{type(e).__name__}: {e}" if str(e) else type(e).__name__
+            print(f"\n[Analyzer Error on '{comment[:20]}...']: {err_detail}")
+            return AnalysisResult(
+                degerlendirme="hata",
+                kategori="hata",
+                llm_uygunsuz=False,
+                llm_sebep=err_detail,
+            )

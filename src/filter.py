@@ -11,7 +11,7 @@ class Filter:
                 r"\b(amk|aq|amq)\b",
                 r"\b(amc[ıi]k[a-z]*)\b",
                 r"\b(o[rro]+spu[a-z]*)\b",
-                r"\b(pi[cç][a-z]*)\b",
+                r"\b(piç|piçler|piçin|piçlik|piçtir|pic|picler)\b",
                 r"\b(yarr[a-z]*)\b",
             ],
             "INSULT": [
@@ -47,10 +47,17 @@ class Filter:
 
     def check_comment(self, comment: str) -> tuple[bool, str | None]:
         text = self.normalize_turkish(comment)
+
+        # Flag comments with <= 2 words
+        if len(text.split()) <= 2:
+            return True, "SHORT_COMMENT"
+
+        # Static regex checks
         for category, patterns in self.COMPILED_RULES.items():
             for pattern in patterns:
                 if pattern.search(text):
                     return True, category
+
         return False, None
 
     def apply_filter(self, df: pd.DataFrame) -> pd.DataFrame:
