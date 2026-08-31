@@ -1,0 +1,15 @@
+.
+├── README.md
+├── config.json
+├── config_example.json
+├── filestructure.tree
+├── main.py
+├── output.csv
+├── output_cleaned.csv
+├── requirements.txt
+└── src
+    ├── analyze.py
+    ├── filter.py
+    └── preprocess.py
+
+2 directories, 11 files

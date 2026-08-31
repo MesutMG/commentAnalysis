@@ -1,6 +1,9 @@
-data/
+data/*
+!data/example_comments.csv
 venv/
 config.json
+output.txt
 output.csv
 output_cleaned.csv
 .DS_Store
+__pycache__/

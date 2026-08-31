@@ -8,7 +8,7 @@ with open(CONFIG_PATH, "r", encoding="utf-8") as f:
     config = json.load(f)
 
 OLLAMA_URL = config.get("ollama_url", "http://localhost:11434/api/generate")
-MODEL_NAME = config.get("model_name", "qwen3.5:9b")
+MODEL_NAME = config.get("model_name", "qwen2.5:3b")
 
 
 # Pydantic Validation Schema
@@ -27,7 +27,7 @@ Yorum: "{comment}"
 JSON formatı:
 {{
   "degerlendirme": "pozitif" | "notr" | "negatif",
-  "kategori": "servis" | "dakiklik" | "personel" | "temizlik" | "spam" | "diger",
+  "kategori": "dakiklik" | "servis" | "personel" | "temizlik" | "spam" | "diger",
   "llm_uygunsuz": false,
   "llm_sebep": null
 }}
