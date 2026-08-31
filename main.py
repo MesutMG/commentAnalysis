@@ -13,11 +13,19 @@ DATA_PATH = config.get("data_path", "data/example_comments.csv")
 OUTPUT_PATH = config.get("output_path", "output.csv")
 base_output, ext = os.path.splitext(OUTPUT_PATH)
 OUTPUT_PATH_CLEAN = f"{base_output}_cleaned{ext}"
-LLM_ROWS = 100 # 0 for whole file
+LLM_ROWS = 100
 
+# 1. Load Data
+try:
+    df = pd.read_csv(DATA_PATH, sep=";", encoding="utf-8")
+except UnicodeDecodeError:
+    df = pd.read_csv(DATA_PATH, sep=";", encoding="windows-1254")
+
+# 2. Preprocess (Drop PII & empty comments)
 preprocessor = Preprocessor()
 comment_filter = Filter()
 analyzer = Analyzer()
+df_analyzed = analyzer.run_pipeline(df_clean, LLM_ROWS)
 
 # 1. Load Data
 try:
