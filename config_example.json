@@ -1,7 +1,8 @@
 {
-    "ollama_url": "http://localhost:11434/api/generate",
-    "model_name": "qwen2.5:3b",
-    "llm_rows": "10",
-    "data_path": "data/example_comments.csv",
-    "output_path": "output.csv"
+  "data_path": "data/example_comments.csv",
+  "output_path": "output.csv",
+  "ollama_url": "http://localhost:11434/api/generate",
+  "model_name": "qwen2.5:3b",
+  "concurrency_limit": 2,
+  "llm_rows": null
 }

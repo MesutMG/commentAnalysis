@@ -22,20 +22,18 @@ class AnalysisResult(BaseModel):
 class Analyzer:
     def __init__(self):
         self.PROMPT_TEMPLATE = """Aşağıdaki müşteri yorumunu analiz et ve yalnızca JSON döndür:
-Yorum: "{comment}"
+            Yorum: "{comment}"
 
-JSON formatı:
-{{
-  "degerlendirme": "pozitif" | "notr" | "negatif",
-  "kategori": "dakiklik" | "servis" | "personel" | "temizlik" | "spam" | "diger",
-  "llm_uygunsuz": false,
-  "llm_sebep": null
-}}
-"""
+            JSON formatı:
+            {{
+            "degerlendirme": "pozitif" | "notr" | "negatif",
+            "kategori": "dakiklik" | "servis" | "personel" | "temizlik" | "spam" | "diger",
+            "llm_uygunsuz": false,
+            "llm_sebep": null
+            }}
+            """
 
-    async def analyze_comment_async(
-        self, session: aiohttp.ClientSession, comment: str
-    ) -> AnalysisResult:
+    async def analyze_comment_async(self, session: aiohttp.ClientSession, comment: str) -> AnalysisResult:
         payload = {
             "model": MODEL_NAME,
             "prompt": self.PROMPT_TEMPLATE.format(comment=comment),
@@ -43,8 +41,6 @@ JSON formatı:
             "format": "json",
             "options": {"temperature": 0.1},
         }
-
-        # Generous timeout for local inference
         req_timeout = aiohttp.ClientTimeout(total=180)
 
         try:

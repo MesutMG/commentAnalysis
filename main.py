@@ -24,7 +24,7 @@ OUTPUT_PATH = config.get("output_path", "output.csv")
 base_output, ext = os.path.splitext(OUTPUT_PATH)
 OUTPUT_PATH_CLEAN = f"{base_output}_cleaned{ext}"
 
-LLM_ROWS = int(config.get("llm_rows", None))
+LLM_ROWS = config.get("llm_rows", None)
 CONCURRENCY_LIMIT = config.get("concurrency_limit", 2)
 
 preprocessor = Preprocessor()
@@ -45,7 +45,6 @@ async def process_llm_batch(df_subset: pd.DataFrame):
     timeout = aiohttp.ClientTimeout(total=180)
 
     async def bounded_analyze(session, comment):
-        # The semaphore prevents sending all 100 requests at once
         async with sem:
             return await analyzer.analyze_comment_async(session, str(comment))
 
@@ -118,7 +117,7 @@ async def process_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFram
 # --- API ENDPOINTS ---
 @app.post("/analyzeComment/")
 async def analyze_comment_endpoint(request: SingleCommentRequest):
-    """Analyzes a single comment without going through Pandas batch processing."""
+    # Analyzes a single comment without going through Pandas batch processing
     comment = request.comment
     
     # 1. Check static filter
@@ -156,7 +155,7 @@ async def analyze_comment_endpoint(request: SingleCommentRequest):
 
 @app.post("/analyzeWholeCsv/")
 async def analyze_whole_csv_endpoint(file: UploadFile = File(...)):
-    """Receives a CSV file upload, processes it, and returns the full analyzed dataset as JSON."""
+    # Processes a csv file and returns the analyzed dataset as JSON
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed.")
 
