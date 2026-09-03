@@ -20,15 +20,39 @@ class Filter:
                 r"\b(aptal[a-z]*)\b",
                 r"\b(ahmak[a-z]*)\b",
                 r"\b(k[üu]stah[a-z]*)\b",
+                r"\b(şerefsiz[a-z]*)\b",
+                r"\b(haysiyetsiz[a-z]*)\b",
+                r"\b(köpek[a-z]*)\b",
+                r"\b(adi[a-z]*)\b",
             ],
-
+            "FRAUD_AND_LEGAL": [
+                r"\b(doland[ıi]r[ıi]c[ıi][a-z]*)\b",
+                r"\b(sahtek[aâ]r[a-z]*)\b",
+                r"\b(h[ıi]rs[ıi]z[a-z]*)\b",
+                r"\b(vurguncu[a-z]*)\b",
+                r"\b(soyguncu[a-z]*)\b",
+                r"\b(gasp[a-z]*)\b",
+                r"\b(tefeci[a-z]*)\b",
+            ],
+            "PHONE_NUMBER": [
+                r"(?:\+?90\s*|\b0)?5\d{2}[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}\b",
+                r"(?:\+?90\s*|\b0)?[1-9]\d{2}[\s.-]?\d{3}[\s.-]?\d{4}\b",
+                r"(?:\+|00)(?:49|44|359|40|1|91)[\s.-]?(?:\(0\)[\s.-]*)?(?:\d[\s.-]?){7,12}\b",
+            ],
+            "LINKS_AND_DOMAINS": [
+                r"https?:\/\/[^\s]+",
+                r"\bwww\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b",
+                r"\b[a-zA-Z0-9.-]+\.(?:com|net|org|com\.tr|gen\.tr|info|biz|site|online|store|xyz)\b(?:\/[^\s]*)?",
+            ],
             "SPAM": [
                 r"^(test|testing|deneme)(\s*\d+)*$",
+                r"^(.)\1{4,}$",  # 'aaaaa', '.....' gibi anlamsız karakter tekrarları
             ],
 
             "OTHER": [
                 r"\b(ter[oö]r[iı]st[a-z]*)",
                 r"\b(mafya[a-z]*)",
+                r"\b(r[üu][sş]vet[a-z]*)",
             ],
         }
 
